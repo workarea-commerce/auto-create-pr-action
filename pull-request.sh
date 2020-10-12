@@ -71,6 +71,7 @@ create_pull_request() {
     else
         # open new pull request
         DATA="{\"title\":\"${TITLE}\", \"body\":\"${BODY}\", \"base\":\"${TARGET}\", \"head\":\"${SOURCE}\", \"draft\":\"${DRAFT}\", \"labels\":[${LABELS}]}";
+        echo "data: ${DATA}"
         curl -sSL -H "${AUTH_HEADER}" -H "${HEADER}" -X POST --data "${DATA}" ${PULLS_URL};
 
         # handle_last_exit_code "$?"
