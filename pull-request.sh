@@ -70,7 +70,7 @@ create_pull_request() {
         echo "pull request from SOURCE ${SOURCE} to TARGET ${TARGET} is already open";
     else
         # open new pull request
-        DATA="{\"title\":\"${TITLE}\", \"body\":\"${BODY}\", \"base\":\"${TARGET}\", \"head\":\"${SOURCE}\", \"draft\":\"${DRAFT}\", \"labels\":[${LABELS}]}";
+        DATA="{\"title\":\"${TITLE}\", \"body\":\"${BODY}\", \"base\":\"${TARGET}\", \"head\":\"${SOURCE}\", \"draft\": ${DRAFT}, \"labels\": [\n${LABELS}\n]}";
         echo "data: ${DATA}"
         curl -sSL -H "${AUTH_HEADER}" -H "${HEADER}" -X POST --data "${DATA}" ${PULLS_URL};
 
