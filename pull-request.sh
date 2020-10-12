@@ -23,6 +23,7 @@ PULLS_URL="${REPO_URL}/pulls";
 ################################################################################
 
 # handle_last_exit_code() { if [[ "$1" != 0 ]]; then exit "$1" fi }
+join() { local IFS="$1"; shift; echo "$*"; }
 
 check_credentials() {
 
@@ -55,6 +56,7 @@ create_pull_request() {
     BODY="${3}";    # this is the content of the message
     TITLE="${4}";   # pull request title
     DRAFT="${5}";   # if PRs are draft
+    LABELS="${6}";  # labels for pull request
 
     # check if the branch already has a pull request open
     DATA="{\"base\":\"${TARGET}\", \"head\":\"${SOURCE}\", \"body\":\"${BODY}\"}";
@@ -68,7 +70,7 @@ create_pull_request() {
         echo "pull request from SOURCE ${SOURCE} to TARGET ${TARGET} is already open";
     else
         # open new pull request
-        DATA="{\"title\":\"${TITLE}\", \"body\":\"${BODY}\", \"base\":\"${TARGET}\", \"head\":\"${SOURCE}\", \"draft\":\"${DRAFT}\"}";
+        DATA="{\"title\":\"${TITLE}\", \"body\":\"${BODY}\", \"base\":\"${TARGET}\", \"head\":\"${SOURCE}\", \"draft\":\"${DRAFT}\", \"labels\":[${LABELS}]";
         curl -sSL -H "${AUTH_HEADER}" -H "${HEADER}" -X POST --data "${DATA}" ${PULLS_URL};
 
         # handle_last_exit_code "$?"
@@ -102,6 +104,20 @@ main () {
     fi
     echo "using PULL_REQUEST_DRAFT $PULL_REQUEST_DRAFT";
 
+    # PULL_LABELS
+    if [[ -z "${PULL_LABELS}" ]]; then
+        echo "no PULL_LABELS are set";
+        PULL_LABELS="";
+    else
+        IFS=',' read -ra labels_array <<< "$PULL_LABELS"
+        # Quote the items
+        labels_array=( "${labels_array[@]/#/\"}" )
+        labels_array=( "${labels_array[@]/%/\"}" )
+        PULL_LABELS=$(echo "${labels_array[*]}")
+        PULL_LABELS=$(join , $PULL_LABELS)
+        echo "using PULL_LABELS $PULL_LABELS"
+    fi
+
     # get target branch
     HEAD_BRANCH=$(jq --raw-output .ref "${GITHUB_EVENT_PATH}");
     HEAD_BRANCH=$(echo "${HEAD_BRANCH/refs\/heads\//}");
@@ -129,7 +145,7 @@ main () {
             fi
             echo "using PULL_REQUEST_TITLE ${PULL_REQUEST_TITLE}";
 
-            create_pull_request "${HEAD_BRANCH}" "${BASE_BRANCH}" "${PULL_REQUEST_BODY}" "${PULL_REQUEST_TITLE}" "${PULL_REQUEST_DRAFT}";
+            create_pull_request "${HEAD_BRANCH}" "${BASE_BRANCH}" "${PULL_REQUEST_BODY}" "${PULL_REQUEST_TITLE}" "${PULL_REQUEST_DRAFT}" "${PULL_LABELS}";
         fi
     fi
 }
