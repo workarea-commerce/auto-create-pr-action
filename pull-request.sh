@@ -72,7 +72,8 @@ create_pull_request() {
         # open new pull request
         DATA="{\"title\":\"${TITLE}\", \"body\":\"${BODY}\", \"base\":\"${TARGET}\", \"head\":\"${SOURCE}\", \"draft\": ${DRAFT} }";
         RESPONSE=$(curl -sSL -H "${AUTH_HEADER}" -H "${HEADER}" -X POST --data "${DATA}" ${PULLS_URL});
-        ISSUE_URL=$(echo "${RESPONSE}" | jq --raw-output '.[] | .issue_url');
+        echo "response: ${RESPONSE}"
+        ISSUE_URL=$(echo "${RESPONSE}" | jq --raw-output '.issue_url');
         LABEL_URL="$ISSUE_URL/labels"
         DATA="{\"labels\": [${LABELS}]}"
         curl -sSL -H "${AUTH_HEADER}" -H "${HEADER}" -X POST --data "${DATA}" ${LABEL_URL};
